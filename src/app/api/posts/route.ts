@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const title = formData.get('title') as string;
     //52
-    // const content = formData.get('content') as string;
+    const content = formData.get('content') as string;
     const published = formData.get('published') === 'true';
     const image = formData.get('image') as File | null;
 
@@ -38,19 +38,21 @@ export async function POST(request: NextRequest) {
       imageUrl = blob.url;
     }
 
-    // Get or create user
-    const user = await prisma.user.findUnique({
+    // Get or create user from authenticated session
+    let user = await prisma.user.findUnique({
       where: { email: session.user?.email! },
     });
 
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      user = await prisma.user.create({
+        data: { email: userEmail, password: 'test123' },
+      });
     }
 
     const post = await prisma.post.create({
       data: {
         title,
-//        content,
+        content,
         published,
         imageUrl,
         authorId: user.id,
