@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       user = await prisma.user.create({
-        data: { email: userEmail, password: 'test123' },
+        data: { email: session.user?.email!, password: 'test123' },
       });
     }
 
