@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from './providers';
@@ -18,10 +19,10 @@ export default function RootLayout({
         <Providers>
         <nav className="bg-gray-900 text-white p-4">
           <div className="container mx-auto flex justify-between items-center">
-            <a href="/" className="text-2xl font-bold">🚀 Blog Via Comet</a>
-            <a href="/admin" className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700">
+            <Link href="/" className="text-2xl font-bold">🚀 Blog Via Comet</Link>
+            <Link href="/admin" className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700">
               Admin
-            </a>
+            </Link>
           </div>
         </nav>
         <main className="container mx-auto px-4 py-8">

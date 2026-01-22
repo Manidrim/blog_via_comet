@@ -26,7 +26,7 @@ export default async function Home() {
       {posts.length === 0 ? (
         <div className="text-center py-12 bg-gray-50 rounded-lg">
           <p className="text-xl text-gray-900">Aucun article publié pour le moment</p>
-          <p className="text-gray-900 mt-2">Allez dans l'admin pour créer votre premier article !</p>
+          <p className="text-gray-900 mt-2">Allez dans l&apos;admin pour créer votre premier article !</p>
         </div>
       ) : (
         <div className="space-y-8">

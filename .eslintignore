@@ -1,0 +1,5 @@
+# Fichiers générés
+.next/
+node_modules/
+out/
+build/

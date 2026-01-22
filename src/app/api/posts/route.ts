@@ -1,70 +1,75 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]/route';
-import { put } from '@vercel/blob';
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-config";
+import { createPostSchema } from "@/lib/validators/post.validator";
+import { prisma } from "@/lib/prisma";
+import { ZodError } from "zod";
+import { put } from "@vercel/blob";
 
-// GET - Récupérer tous les posts
-export async function GET() {
-  const posts = await prisma.post.findMany({
-    orderBy: { createdAt: 'desc' },
-    include: { author: { select: { email: true } } },
-  });
-  return NextResponse.json(posts);
-}
-
-// POST - Créer un nouveau post
-export async function POST(request: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export async function GET(request: NextRequest) {
   try {
-    const formData = await request.formData();
-    const title = formData.get('title') as string;
-    //52
-    const content = formData.get('content') as string;
-    const published = formData.get('published') === 'true';
-    const image = formData.get('image') as File | null;
-
-    let imageUrl: string | null = null;
-
-    // Upload image to Vercel Blob if provided
-    if (image && image.size > 0) {
-      const blob = await put(image.name, image, {
-        access: 'public',
-      });
-      imageUrl = blob.url;
-    }
-
-    // Get or create user from authenticated session
-    let user = await prisma.user.findUnique({
-      where: { email: session.user?.email! },
-    });
-
-    if (!user) {
-      user = await prisma.user.create({
-        data: { email: session.user?.email!, password: 'test123' },
-      });
-    }
-
-    const post = await prisma.post.create({
-      data: {
-        title,
-        content,
-        published,
-        imageUrl,
-        authorId: user.id,
+    const posts = await prisma.post.findMany({
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        published: true,
+        imageUrl: true,
+        createdAt: true,
+        author: {
+          select: {
+            email: true,
+            name: true,
+          },
+        },
       },
     });
+    return NextResponse.json(posts);
+  } catch (error) {
+    console.error("Erreur GET posts:", error);
+    return NextResponse.json({ error: "Erreur serveur interne" }, { status: 500 });
+  }
+}
 
+export async function POST(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: "Non authentifie" }, { status: 401 });
+    }
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true, role: true },
+    });
+    if (!user || user.role !== "ADMIN") {
+      return NextResponse.json({ error: "Permissions insuffisantes" }, { status: 403 });
+    }
+    const formData = await request.formData();
+    let imageUrl: string | null = null;
+    const image = formData.get("image") as File | null;
+    if (image && image.size > 0) {
+      const blob = await put(image.name, image, { access: "public" });
+      imageUrl = blob.url;
+    }
+    const validatedData = createPostSchema.parse({
+      title: formData.get("title"),
+      content: formData.get("content"),
+      published: formData.get("published") === "true",
+      imageUrl,
+    });
+    const post = await prisma.post.create({
+      data: { ...validatedData, authorId: user.id },
+    });
     return NextResponse.json(post, { status: 201 });
   } catch (error) {
-    console.error('Error creating post:', error);
-    return NextResponse.json(
-      { error: 'Failed to create post' },
-      { status: 500 }
-    );
+    if (error instanceof ZodError) {
+      return NextResponse.json(
+        { error: "Validation echouee", details: error.errors.map((e) => ({ path: e.path.join("."), message: e.message })) },
+        { status: 400 }
+      );
+    }
+    console.error("Erreur creation post:", error);
+    return NextResponse.json({ error: "Erreur serveur interne" }, { status: 500 });
   }
 }

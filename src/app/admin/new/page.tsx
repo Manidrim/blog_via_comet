@@ -71,7 +71,7 @@ export default function NewPostPage() {
 
       <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-lg space-y-6">
         <div>
-          <label className="block text-sm font-semibold mb-2">Titre de l'article *</label>
+          <label className="block text-sm font-semibold mb-2">Titre de l&apos;article *</label>
           <input
             type="text"
             name="title"

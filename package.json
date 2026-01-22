@@ -10,8 +10,11 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.11.1",
     "@prisma/client": "^5.21.1",
     "@vercel/blob": "^0.23.4",
+    "bcrypt": "^6.0.0",
+    "isomorphic-dompurify": "^2.35.0",
     "next": "15.1.0",
     "next-auth": "^4.24.10",
     "react": "^19.0.0",
@@ -20,6 +23,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/node": "^22.10.2",
     "@types/react": "^19.0.1",
     "@types/react-dom": "^19.0.2",
